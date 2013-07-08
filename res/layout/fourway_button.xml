@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:background="@color/light_blue"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="4dp">
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_weight="3"
+        android:textColor="@color/darkerer_blue"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_height="match_parent"
+        android:text="@string/fourway1"
+        android:layout_margin="4dp"
+        android:id="@+id/fourway_left"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_weight="5"
+        android:layout_height="match_parent">
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:textColor="@color/darkerer_blue"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_margin="4dp"
+            android:layout_weight="1"
+            android:text="@string/fourway2"
+            android:id="@+id/fourway_forward"
+            android:layout_gravity="center" />
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:textColor="@color/darkerer_blue"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_margin="4dp"
+            android:layout_weight="1"
+            android:text="@string/fourway3"
+            android:id="@+id/fourway_reverse" />
+    </LinearLayout>
+
+    <Button
+        android:layout_width="0dp"
+        android:layout_weight="3"
+        android:layout_margin="4dp"
+        android:textColor="@color/darkerer_blue"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_height="match_parent"
+        android:text="@string/fourway4"
+        android:id="@+id/fourway_right"/>
+</LinearLayout>

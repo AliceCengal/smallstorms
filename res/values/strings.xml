@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SmallStorms</string>
+
+    <string name="fourway1">Left</string>
+    <string name="fourway2">Forward</string>
+    <string name="fourway3">Reverse</string>
+    <string name="fourway4">Right</string>
+
+</resources>

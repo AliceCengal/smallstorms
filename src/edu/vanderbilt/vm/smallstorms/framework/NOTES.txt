@@ -1,0 +1,1 @@
+This framework is taken and adapted from Beginning Android Games 2nd Edition by Mario Zechner.
