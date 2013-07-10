@@ -238,14 +238,12 @@ private static class DragSprite extends Sprite {
         super(game, x, y, costume);
     }
 
-    private static final double MAGIC_I_DONT_KNOW_WHY = 1.25; // Set this to 1.0 if you're curious.
-
     @Override
     void present(float deltaTime) {
         if (mFocused) {
             mGame.getGraphics().drawRect(
                     mBoundingBox.left - 5,
-                    (int)(mBoundingBox.top*MAGIC_I_DONT_KNOW_WHY) - 5,
+                    mBoundingBox.top - 5,
                     mBoundingBox.width() + 10,
                     mBoundingBox.height() + 10,
                     0xFFAA0000); }
@@ -253,7 +251,7 @@ private static class DragSprite extends Sprite {
         mGame.getGraphics().drawPixmap(
                 mCostume,
                 mBoundingBox.left,
-                (int)(mBoundingBox.top*MAGIC_I_DONT_KNOW_WHY));
+                mBoundingBox.top);
     }
 
     @Override
@@ -293,7 +291,7 @@ private static class LabelSprite extends Sprite {
     void present(float deltaTime) {
         mGame.getGraphics().drawRect(
                 mBoundingBox.left,
-                (int)(mBoundingBox.top*1.25),
+                mBoundingBox.top,
                 mBoundingBox.width(),
                 mBoundingBox.height(),
                 0xFF8FFFFF);
@@ -301,7 +299,7 @@ private static class LabelSprite extends Sprite {
         mGame.getGraphics().drawText(
                 mText,
                 mBoundingBox.left + mPadding,
-                (int)(mBoundingBox.top*1.25) + mPadding + (int) mTextSize,
+                mBoundingBox.top + mPadding + (int) mTextSize,
                 mTextSize,
                 0xFF000000);
 

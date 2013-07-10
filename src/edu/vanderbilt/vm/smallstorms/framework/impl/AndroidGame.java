@@ -8,10 +8,12 @@ import android.graphics.Bitmap.Config;
 import android.os.Bundle;
 //import android.os.PowerManager;
 //import android.os.PowerManager.WakeLock;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 //import android.view.WindowManager;
 
 import android.view.WindowManager;
+import android.widget.Toast;
 import edu.vanderbilt.vm.smallstorms.framework.Audio;
 import edu.vanderbilt.vm.smallstorms.framework.FileIO;
 import edu.vanderbilt.vm.smallstorms.framework.Game;
@@ -19,7 +21,7 @@ import edu.vanderbilt.vm.smallstorms.framework.Graphics;
 import edu.vanderbilt.vm.smallstorms.framework.Input;
 import edu.vanderbilt.vm.smallstorms.framework.Screen;
 
-public abstract class AndroidGame extends Activity implements Game {
+public abstract class AndroidGame extends Activity implements Game, ViewTreeObserver.OnGlobalLayoutListener {
     AndroidFastRenderView renderView;
     Graphics graphics;
     //Audio audio;
@@ -35,8 +37,11 @@ public abstract class AndroidGame extends Activity implements Game {
        From the book, fullscreen : 480, 320
      */
 
-    public static final int MAJOR_AXIS = 960;
-    public static final int MINOR_AXIS = 442;
+    public static final int MAJOR_AXIS = 1280;
+    public static final int MINOR_AXIS = 696;
+
+    private int frameBufferWidth;
+    private int frameBufferHeight;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -50,26 +55,25 @@ public abstract class AndroidGame extends Activity implements Game {
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-        int frameBufferWidth = isLandscape ? MAJOR_AXIS : MINOR_AXIS;
-        int frameBufferHeight = isLandscape ? MINOR_AXIS : MAJOR_AXIS;
-        Bitmap frameBuffer = Bitmap.createBitmap(frameBufferWidth,
-                frameBufferHeight, Config.RGB_565);
-        
-        float scaleX = (float) frameBufferWidth
-                / getWindowManager().getDefaultDisplay().getWidth();
-        float scaleY = (float) frameBufferHeight
-                / getWindowManager().getDefaultDisplay().getHeight();
+        frameBufferWidth = isLandscape ? MAJOR_AXIS : MINOR_AXIS;
+        frameBufferHeight = isLandscape ? MINOR_AXIS : MAJOR_AXIS;
+
+        Bitmap frameBuffer = Bitmap.createBitmap(
+                frameBufferWidth,
+                frameBufferHeight,
+                Config.RGB_565);
 
         renderView = new AndroidFastRenderView(this, frameBuffer);
+        setContentView(renderView);
+
+        renderView.getViewTreeObserver()
+                .addOnGlobalLayoutListener(this);
+
         graphics = new AndroidGraphics(getAssets(), frameBuffer);
         fileIO = new AndroidFileIO(this);
         //audio = new AndroidAudio(this);
-        input = new AndroidInput(this, renderView, scaleX, scaleY);
         screen = getStartScreen();
-        setContentView(renderView);
-        
-        //PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        //wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "GLGame");
+
     }
 
     @Override
@@ -121,4 +125,22 @@ public abstract class AndroidGame extends Activity implements Game {
     public Screen getCurrentScreen() {
         return screen;
     }
+
+    @Override
+    public void onGlobalLayout() {
+        /*Toast.makeText(
+                this,
+                "RenderView width : " + renderView.getWidth() + ", height : " + renderView.getHeight(),
+                Toast.LENGTH_SHORT)
+                .show();*/
+
+        float scaleX = (float) frameBufferWidth
+                / renderView.getWidth();
+        float scaleY = (float) frameBufferHeight
+                / renderView.getHeight();
+
+        input = new AndroidInput(this, renderView, scaleX, scaleY);
+
+    }
+
 }
