@@ -4,6 +4,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import edu.vanderbilt.vm.smallstorms.framework.Game;
 import edu.vanderbilt.vm.smallstorms.framework.Pixmap;
+import edu.vanderbilt.vm.smallstorms.model.Workspace;
 
 /**
  * Date: 7/7/13
@@ -11,39 +12,71 @@ import edu.vanderbilt.vm.smallstorms.framework.Pixmap;
  */
 public class Sprite {
 
-Game mGame;
+protected Game mGame;
+protected Workspace mWorkspace;
 
-Point mPosition;
-Rect mBoundingBox;
-Pixmap mCostume;
+private Point mPosition;
+protected Rect mBoundingBox;
+protected Pixmap mCostume;
 
 boolean mFocused;
 
-public Sprite(Game game) {
+/**
+ * @param game for access to sound and graphics utilities
+ * @param ws for access to other denizens of the workspace
+ */
+public Sprite(Game game, Workspace ws) {
     mGame = game;
+    mWorkspace = ws;
 }
 
-public Sprite(Game game, int x, int y, Pixmap costume) {
-    this(game);
-    mPosition = new Point(x, y);
+public Sprite(Game game, Workspace ws, Pixmap costume) {
+    this(game, ws);
+    mPosition = new Point(0, 0);
     mCostume = costume;
     mBoundingBox = new Rect();
     adjustBoundingBox();
 }
 
-void update(float deltaTime) {}
+public Sprite setPosition(Point position) {
+    return setPosition(position.x, position.y); }
 
-void present(float deltaTime) {}
+public Sprite setPosition(int x, int y) {
+    mPosition.set(x, y);
+    adjustBoundingBox();
+    return this; }
 
-boolean touches(Point point) {
+public int getX() { return mPosition.x; }
+
+public int getY() { return mPosition.y; }
+
+public Sprite setCostume(Pixmap costume) {
+    mCostume = costume;
+    return this; }
+
+/**
+ * Does nothing. Subclass should override if needed
+ *
+ * @param deltaTime since last update
+ */
+public void update(float deltaTime) {}
+
+/**
+ * Does nothing. Subclass should override if needed
+ *
+ * @param deltaTime since last update
+ */
+public void present(float deltaTime) {}
+
+public boolean touches(Point point) {
     return touches(point.x, point.y);
 }
 
-boolean touches(int x, int y) {
+public boolean touches(int x, int y) {
     return mBoundingBox.contains(x, y);
 }
 
-void adjustBoundingBox() {
+private void adjustBoundingBox() {
     mBoundingBox.set(
             mPosition.x - mCostume.getWidth()/2,    // left
             mPosition.y - mCostume.getHeight()/2,   // top
@@ -51,10 +84,14 @@ void adjustBoundingBox() {
             mPosition.y + mCostume.getHeight()/2);  // bottom
 }
 
-void click() {}
+public void click() {}
 
-void hover(Sprite theOneOnTop) {}
+public void hoverIn(Sprite hoverer) {}
 
-void drop(Sprite theOneAtTheBottom, Point location) {}
+public void hoverOut(Sprite hoverer) {}
+
+public void drop(Sprite droppee) {}
+
+public void drop(Sprite theOneAtTheBottom, Point location) {}
 
 }

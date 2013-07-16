@@ -1,19 +1,13 @@
 package edu.vanderbilt.vm.smallstorms.framework.impl;
 
 import android.app.Activity;
-//import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.os.Bundle;
-//import android.os.PowerManager;
-//import android.os.PowerManager.WakeLock;
 import android.view.ViewTreeObserver;
-import android.view.Window;
-//import android.view.WindowManager;
 
 import android.view.WindowManager;
-import android.widget.Toast;
 import edu.vanderbilt.vm.smallstorms.framework.Audio;
 import edu.vanderbilt.vm.smallstorms.framework.FileIO;
 import edu.vanderbilt.vm.smallstorms.framework.Game;
@@ -28,7 +22,6 @@ public abstract class AndroidGame extends Activity implements Game, ViewTreeObse
     Input input;
     FileIO fileIO;
     Screen screen;
-    //WakeLock wakeLock;
 
     /* Some typical sizes for the SurfaceView : MAJOR_AXIS, MINOR_AXIS
 
@@ -37,8 +30,8 @@ public abstract class AndroidGame extends Activity implements Game, ViewTreeObse
        From the book, fullscreen : 480, 320
      */
 
-    public static final int MAJOR_AXIS = 1280;
-    public static final int MINOR_AXIS = 696;
+    public static final int MAJOR_AXIS = 960;
+    public static final int MINOR_AXIS = 442;
 
     private int frameBufferWidth;
     private int frameBufferHeight;
@@ -79,7 +72,6 @@ public abstract class AndroidGame extends Activity implements Game, ViewTreeObse
     @Override
     public void onResume() {
         super.onResume();
-        //wakeLock.acquire();
         screen.resume();
         renderView.resume();
     }
@@ -87,7 +79,6 @@ public abstract class AndroidGame extends Activity implements Game, ViewTreeObse
     @Override
     public void onPause() {
         super.onPause();
-        //wakeLock.release();
         renderView.pause();
         screen.pause();
 
