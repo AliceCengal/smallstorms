@@ -42,16 +42,36 @@ public WorkScreen(Game game) {
             .addSprite(new RandomSpawningSprite(mGame, mWorkspace, Assets.mAppIcon)
                     .setPosition(200, 200));*/
 
-    SpriteController c = new SpriteController(
-            new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
-                    .setPosition(150, 50));
-
-    mWorkspace.addSprite(c.mSprite);
-    mTouchState.addTouchListener(c);
-
     SpriteFactoryController sfc = new SpriteFactoryController(
+            new DragSprite(mGame, mWorkspace, Assets.mPointerStart)
+                    .setPosition(50, 50),
+            mGame,
+            mWorkspace);
+
+    mWorkspace.addSprite(sfc.mFactorySprite);
+    mTouchState.addTouchListener(sfc);
+
+    sfc = new SpriteFactoryController(
             new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
-                    .setPosition(300, 50),
+                    .setPosition(50, 150),
+            mGame,
+            mWorkspace);
+
+    mWorkspace.addSprite(sfc.mFactorySprite);
+    mTouchState.addTouchListener(sfc);
+
+    sfc = new SpriteFactoryController(
+            new DragSprite(mGame, mWorkspace, Assets.mPointerEnd)
+                    .setPosition(50, 250),
+            mGame,
+            mWorkspace);
+
+    mWorkspace.addSprite(sfc.mFactorySprite);
+    mTouchState.addTouchListener(sfc);
+
+    sfc = new SpriteFactoryController(
+            new DragSprite(mGame, mWorkspace, Assets.mAppIcon)
+                    .setPosition(50, 350),
             mGame,
             mWorkspace);
 
@@ -71,6 +91,7 @@ public void present(float deltaTime) {
 
     Graphics g = mGame.getGraphics();
     g.clear(0xffee7d);
+    g.drawRect(0, 0, 100, g.getHeight(), 0xfff7991e);
 
     for (int i = 0; i < mWorkspace.getSprites().size(); i++) {
         mWorkspace.getSprites().get(i).present(deltaTime);
@@ -318,7 +339,7 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
 
     @Override
     public TouchMachine.DragUpdater startDrag() {
-        final Sprite s = new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
+        final Sprite s = new DragSprite(mGame, mWorkspace, mFactorySprite.mCostume)
                 .setPosition(mFactorySprite.getX(), mFactorySprite.getY());
 
         mWorkspace.addSprite(s);

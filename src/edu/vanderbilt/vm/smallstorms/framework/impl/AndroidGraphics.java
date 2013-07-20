@@ -20,11 +20,16 @@ public class AndroidGraphics implements Graphics {
     Rect srcRect = new Rect();
     Rect dstRect = new Rect();
 
+    Paint mTextPaint;
+
     public AndroidGraphics(AssetManager assets, Bitmap frameBuffer) {
         this.assets = assets;
         this.frameBuffer = frameBuffer;
         this.canvas = new Canvas(frameBuffer);
         this.paint = new Paint();
+
+        mTextPaint = new Paint();
+        mTextPaint.setTypeface(Typeface.DEFAULT);
     }
 
     @Override
@@ -94,7 +99,7 @@ public class AndroidGraphics implements Graphics {
     public void drawRect(int x, int y, int width, int height, int color) {
         paint.setColor(color);
         paint.setStyle(Style.FILL);
-        canvas.drawRect(x, y, x + width - 1, y + width - 1, paint);
+        canvas.drawRect(x, y, x + width - 1, y + height - 1, paint);
     }
 
     @Override
@@ -124,6 +129,16 @@ public class AndroidGraphics implements Graphics {
         paint.setTextSize(size);
         paint.setTypeface(Typeface.DEFAULT);
         canvas.drawText(text, x, y, paint);
+    }
+
+    @Override
+    public void textSize(String text, int[] dimension) {
+
+        if (dimension == null) throw new IllegalArgumentException("need an output integer array");
+        if (dimension.length != 2) throw new IllegalArgumentException("dimension must be an array of size 2");
+
+        dimension[0] = (int) mTextPaint.measureText(text);
+        dimension[1] = (int) mTextPaint.getTextSize();
     }
 
     @Override

@@ -22,6 +22,8 @@ public interface Graphics {
 
     public void drawText(String text, int x, int y, float size, int color);
 
+    public void textSize(String text, int[] dimension);
+
     public int getWidth();
 
     public int getHeight();
