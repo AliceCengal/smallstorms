@@ -1,12 +1,11 @@
 package edu.vanderbilt.vm.smallstorms.ui;
 
 import android.graphics.Point;
-import android.util.Log;
+import android.graphics.Rect;
 import edu.vanderbilt.vm.smallstorms.framework.*;
 import edu.vanderbilt.vm.smallstorms.framework.impl.AndroidGame;
 import edu.vanderbilt.vm.smallstorms.model.Workspace;
 
-import java.util.List;
 import java.util.Random;
 
 /**
@@ -24,14 +23,12 @@ private Workspace mWorkspace;
 public WorkScreen(Game game) {
     super(game);
     mFPS = new FPSCounter();
-    initTouchMachines();
+    //initTouchMachines();
 
     mWorkspace = new Workspace();
+    mTouchState = new TouchMachine();
 
-    mWorkspace
-            .addSprite(new DragSprite(game, mWorkspace, Assets.mPointerArrow)
-                    .setPosition(50, 50))
-
+    /*mWorkspace
             .addSprite(new DragSprite(game, mWorkspace, Assets.mPointerStart)
                     .setPosition(150, 50))
 
@@ -43,8 +40,23 @@ public WorkScreen(Game game) {
                     .setPosition(500, 300))
 
             .addSprite(new RandomSpawningSprite(mGame, mWorkspace, Assets.mAppIcon)
-                    .setPosition(200, 200));
+                    .setPosition(200, 200));*/
 
+    SpriteController c = new SpriteController(
+            new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
+                    .setPosition(150, 50));
+
+    mWorkspace.addSprite(c.mSprite);
+    mTouchState.addTouchListener(c);
+
+    SpriteFactoryController sfc = new SpriteFactoryController(
+            new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
+                    .setPosition(300, 50),
+            mGame,
+            mWorkspace);
+
+    mWorkspace.addSprite(sfc.mFactorySprite);
+    mTouchState.addTouchListener(sfc);
 }
 
 @Override
@@ -78,188 +90,6 @@ public void resume() {
 public void dispose() {
 }
 
-/** Common Interface for a bunch of state machines which will interpret touch input */
-private interface TouchMachine {
-    void handleTouchInput(List<Input.TouchEvent> events);
-}
-
-private TouchMachine[] mTouchMachines;
-
-private static final int VANGUARD = 0;
-private static final int VOID = 1;
-private static final int CLICK = 2;
-private static final int DRAG = 3;
-private static final int SLEEP = 4;
-
-/**
- * Set up a pool of machines that can be recycled. This hopefully avoids GC
- * during vigorous touching sessions.
- */
-private void initTouchMachines() {
-    mTouchMachines = new TouchMachine[5];
-    mTouchMachines[VANGUARD] = new VanguardMachine();
-    mTouchMachines[VOID] = new VoidMachine();
-    mTouchMachines[CLICK] = new ClickMachine();
-    mTouchMachines[DRAG] = new DragMachine();
-    mTouchMachines[SLEEP] = new SleepMachine();
-    mTouchState = mTouchMachines[VANGUARD];
-}
-
-/**
- * The frontliner who will catch a DOWN event and determine if it falls on a valid touch recipient.
- * If yes, pass the touch input stream to ClickMachine, else to VoidMachine.
- */
-private class VanguardMachine implements TouchMachine {
-
-    VanguardMachine() {
-        Log.d(WorkScreen.class.getName(), "VanguardMachine reporting");
-    }
-
-    @Override
-    public void handleTouchInput(List<Input.TouchEvent> events) {
-        int len = events.size();
-        Input.TouchEvent event;
-
-        for (int i = 0; i < len; i++) {
-            event = events.get(i);
-
-            if (event.type == Input.TouchEvent.TOUCH_DOWN) {
-
-                /*
-                for (int j = 0; j < mWorkspace.getSprites().size(); j++) {
-                    if (mWorkspace.getSprites().get(j).touches(event.x, event.y)) {
-                        mTouchState = ((ClickMachine) mTouchMachines[CLICK])
-                                .setTarget(mWorkspace.getSprites().get(j));
-                        mTouchState.handleTouchInput(events.subList(i + 1, len));
-                        return; }
-                }*/
-
-                Sprite s = mWorkspace.getTouchingSprite(event.x, event.y);
-                if (s != null) {
-                    mTouchState = ((ClickMachine) mTouchMachines[CLICK])
-                            .setTarget(s);
-                    mTouchState.handleTouchInput(events.subList(i + 1, len));
-                    return; }
-
-                else {
-                    mTouchState = mTouchMachines[VOID];
-                    mTouchState.handleTouchInput(events.subList(i + 1, len));
-                    return; }
-            }
-        }
-    }
-}
-
-/**
- * Indicates invalid touch. Will consume MOVE events until it receives an UP event, at which point it will
- * return control to VanguardMachine.
- */
-private class VoidMachine implements TouchMachine {
-    @Override
-    public void handleTouchInput(List<Input.TouchEvent> events) {
-        int len = events.size();
-        for (int i = 0; i < len; i++) {
-            if (events.get(i).type == Input.TouchEvent.TOUCH_UP) {
-                mTouchState = mTouchMachines[VANGUARD];
-                mTouchState.handleTouchInput(events.subList(i + 1, len));
-                return; }
-        }
-    }
-}
-
-/**
- * Indicates that a valid sprite is targeted by the DOWN event. Will check for the MOVE stream. If the MOVE
- * stream stays inside the bounds of the Sprite, the Sprite will receive a click event upon an UP event
- * and control will return to VanguardMachine. If the MOVE stream goes outside the Sprite, controls is passed
- * to DragMachine.
- */
-private class ClickMachine implements TouchMachine {
-
-    Sprite mTarget;
-
-    TouchMachine setTarget(Sprite target) {
-        mTarget = target;
-        mTarget.mFocused = true;
-        return this;
-    }
-
-    @Override
-    public void handleTouchInput(List<Input.TouchEvent> events) {
-        int len = events.size();
-        Input.TouchEvent event;
-
-        for (int i = 0; i < len; i++) {
-            event = events.get(i);
-            if (event.type == Input.TouchEvent.TOUCH_DRAGGED) {
-                if (!mTarget.touches(event.x, event.y)) {
-                    mTouchState = ((DragMachine) mTouchMachines[DRAG]).setOrigin(mTarget);
-                    mTouchState.handleTouchInput(events.subList(i + 1, len));
-                    return; }}
-
-            else if (event.type == Input.TouchEvent.TOUCH_UP) {
-                // Do click event
-                mTarget.click();
-                mTarget.mFocused = false;
-
-                mTouchState = mTouchMachines[VANGUARD];
-                mTouchState.handleTouchInput(events.subList(i + 1, len));
-                return; }
-        }
-    }
-}
-
-/**
- * Handles a drag sequence. Will return control to Vanguard as soon as the drag sequence finishes.
- */
-private class DragMachine implements TouchMachine {
-
-    Sprite mOrigin;
-    Point mInitial = new Point();
-
-    TouchMachine setOrigin(Sprite origin) {
-        mOrigin = origin;
-        mInitial.set(mOrigin.getX(), mOrigin.getY());
-        return this;
-    }
-
-    @Override
-    public void handleTouchInput(List<Input.TouchEvent> events) {
-        int len = events.size();
-        Input.TouchEvent event;
-
-        for (int i = 0; i < len; i++) {
-            event = events.get(i);
-            if (event.type == Input.TouchEvent.TOUCH_DRAGGED) {
-                mOrigin.setPosition(event.x, event.y); }
-
-            else if (event.type == Input.TouchEvent.TOUCH_UP) {
-                mOrigin.mFocused = false;
-
-                mTouchState = mTouchMachines[VANGUARD];
-                mTouchState.handleTouchInput(events.subList(i + 1, len));
-                return; }
-        }
-    }
-}
-
-/**
- * Indicate that the workscreen is disabled. No response to any touch events.
- */
-private class HoverMachine implements TouchMachine {
-
-    @Override
-    public void handleTouchInput(List<Input.TouchEvent> events) {
-    }
-
-}
-
-private class SleepMachine implements TouchMachine {
-
-    @Override
-    public void handleTouchInput(List<Input.TouchEvent> events) {
-    }
-}
-
 private static class DragSprite extends Sprite {
 
     public DragSprite(Game game, Workspace ws) {
@@ -284,11 +114,6 @@ private static class DragSprite extends Sprite {
                 mCostume,
                 mBoundingBox.left,
                 mBoundingBox.top);
-    }
-
-    @Override
-    public void click() {
-        Log.d(WorkScreen.class.getName(), "DragSprite is clicked");
     }
 
 }
@@ -381,6 +206,144 @@ private static class RandomSpawningSprite extends Sprite {
                     r.nextInt(AndroidGame.MINOR_AXIS)));
     }
 
+}
+
+public static class SpriteController implements TouchMachine.TouchListener {
+
+    public SpriteController(Sprite slave) {
+        mSprite = slave;
+    }
+
+    private Sprite mSprite;
+
+    @Override
+    public void setPosition(Point position) {
+        mSprite.setPosition(position);
+    }
+
+    @Override
+    public Rect getTouchBox() {
+        return mSprite.mBoundingBox;
+    }
+
+    @Override
+    public int getX() {
+        return mSprite.getX();
+    }
+
+    @Override
+    public int getY() {
+        return mSprite.getY();
+    }
+
+    @Override
+    public void touch() {
+        mSprite.mFocused = true;
+    }
+
+    @Override
+    public void click() {
+        mSprite.mFocused = false;
+    }
+
+    @Override
+    public TouchMachine.DragUpdater startDrag() {
+        return new TouchMachine.DragUpdater() {
+            @Override public void update(Point position) {
+                mSprite.setPosition(position); }};
+    }
+
+    @Override
+    public void endDrag() {
+        mSprite.mFocused = false;
+    }
+
+    @Override
+    public void enterHover(TouchMachine.TouchListener hoverer) {
+        mSprite.mFocused = true;
+    }
+
+    @Override
+    public void leaveHover() {
+        mSprite.mFocused = false;
+    }
+
+    @Override
+    public void drop(TouchMachine.TouchListener dropper) {
+        dropper.setPosition(new Point(mSprite.getX(), mSprite.getY() + 50));
+    }
+}
+
+public static class SpriteFactoryController implements TouchMachine.TouchListener {
+
+    Sprite mFactorySprite;
+    Workspace mWorkspace;
+    Game mGame;
+
+    public SpriteFactoryController(Sprite sprite, Game g, Workspace ws) {
+        mFactorySprite = sprite;
+        mGame = g;
+        mWorkspace = ws;
+    }
+
+    @Override
+    public void setPosition(Point position) {
+        mFactorySprite.setPosition(position);
+    }
+
+    @Override
+    public Rect getTouchBox() {
+        return mFactorySprite.mBoundingBox;
+    }
+
+    @Override
+    public int getX() {
+        return mFactorySprite.getX();
+    }
+
+    @Override
+    public int getY() {
+        return mFactorySprite.getY();
+    }
+
+    @Override
+    public void touch() {
+        mFactorySprite.mFocused = true;
+    }
+
+    @Override
+    public void click() {
+        mFactorySprite.mFocused = false;
+    }
+
+    @Override
+    public TouchMachine.DragUpdater startDrag() {
+        final Sprite s = new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
+                .setPosition(mFactorySprite.getX(), mFactorySprite.getY());
+
+        mWorkspace.addSprite(s);
+
+        return new TouchMachine.DragUpdater() {
+            @Override public void update(Point position) {
+                s.setPosition(position); }};
+    }
+
+    @Override
+    public void endDrag() {
+        mFactorySprite.mFocused = false;
+    }
+
+    @Override
+    public void enterHover(TouchMachine.TouchListener hoverer) {
+    }
+
+    @Override
+    public void leaveHover() {
+    }
+
+    @Override
+    public void drop(TouchMachine.TouchListener dropper) {
+    }
 }
 
 }
