@@ -1,6 +1,5 @@
 package edu.vanderbilt.vm.smallstorms.ui;
 
-import android.graphics.PixelFormat;
 import edu.vanderbilt.vm.smallstorms.framework.Game;
 import edu.vanderbilt.vm.smallstorms.framework.Graphics;
 import edu.vanderbilt.vm.smallstorms.framework.Screen;
@@ -22,6 +21,7 @@ public void update(float deltaTime) {
     Assets.mPointerArrow = g.newPixmap("thumb_arrow.png", Graphics.PixmapFormat.ARGB4444);
     Assets.mPointerStart = g.newPixmap("thumb_start.png", Graphics.PixmapFormat.ARGB4444);
     Assets.mPointerEnd = g.newPixmap("thumb_end.png", Graphics.PixmapFormat.ARGB4444);
+    Assets.mBlock = g.newPixmap("block.png", Graphics.PixmapFormat.ARGB4444);
 
     mGame.setScreen(new WorkScreen(mGame));
 }

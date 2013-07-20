@@ -132,13 +132,17 @@ public class AndroidGraphics implements Graphics {
     }
 
     @Override
-    public void textSize(String text, int[] dimension) {
+    public void textSize(String text, float size, int[] dimension) {
 
         if (dimension == null) throw new IllegalArgumentException("need an output integer array");
         if (dimension.length != 2) throw new IllegalArgumentException("dimension must be an array of size 2");
 
-        dimension[0] = (int) mTextPaint.measureText(text);
-        dimension[1] = (int) mTextPaint.getTextSize();
+        Rect r = new Rect();
+        mTextPaint.setTextSize(size);
+        mTextPaint.getTextBounds(text, 0, text.length(), r);
+
+        dimension[0] = r.width();
+        dimension[1] = r.height();
     }
 
     @Override

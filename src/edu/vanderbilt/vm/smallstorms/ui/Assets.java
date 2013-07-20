@@ -13,5 +13,6 @@ static Pixmap mPointerStart;
 static Pixmap mPointerEnd;
 
 static Pixmap mAppIcon;
+static Pixmap mBlock;
 
 }

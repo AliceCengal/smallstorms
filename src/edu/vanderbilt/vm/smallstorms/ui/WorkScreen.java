@@ -23,60 +23,72 @@ private Workspace mWorkspace;
 public WorkScreen(Game game) {
     super(game);
     mFPS = new FPSCounter();
-    //initTouchMachines();
 
     mWorkspace = new Workspace();
     mTouchState = new TouchMachine();
 
-    /*mWorkspace
-            .addSprite(new DragSprite(game, mWorkspace, Assets.mPointerStart)
-                    .setPosition(150, 50))
+    SpriteController c = new SpriteController(new LabelSprite(game, mWorkspace)
+            .setText("Label")
+            .setPosition(500, 300));
 
-            .addSprite(new DragSprite(game, mWorkspace, Assets.mAppIcon)
-                    .setPosition(300, 300))
-
-            .addSprite(new LabelSprite(game, mWorkspace, Assets.mPointerEnd)
-                    .setText("Label")
-                    .setPosition(500, 300))
-
-            .addSprite(new RandomSpawningSprite(mGame, mWorkspace, Assets.mAppIcon)
-                    .setPosition(200, 200));*/
+    mWorkspace.addSprite(c.mSprite);
+    mTouchState.addTouchListener(c);
 
     SpriteFactoryController sfc = new SpriteFactoryController(
-            new DragSprite(mGame, mWorkspace, Assets.mPointerStart)
-                    .setPosition(50, 50),
+            new DragSprite(mGame, mWorkspace)
+                    .setCostume(Assets.mPointerStart)
+                    .setPosition(50, 40),
             mGame,
-            mWorkspace);
+            mWorkspace,
+            mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
     mTouchState.addTouchListener(sfc);
 
     sfc = new SpriteFactoryController(
-            new DragSprite(mGame, mWorkspace, Assets.mPointerArrow)
-                    .setPosition(50, 150),
+            new DragSprite(mGame, mWorkspace)
+                    .setCostume(Assets.mPointerArrow)
+                    .setPosition(50, 120),
             mGame,
-            mWorkspace);
+            mWorkspace,
+            mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
     mTouchState.addTouchListener(sfc);
 
     sfc = new SpriteFactoryController(
-            new DragSprite(mGame, mWorkspace, Assets.mPointerEnd)
-                    .setPosition(50, 250),
+            new DragSprite(mGame, mWorkspace)
+                    .setCostume(Assets.mPointerEnd)
+                    .setPosition(50, 200),
             mGame,
-            mWorkspace);
+            mWorkspace,
+            mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
     mTouchState.addTouchListener(sfc);
 
     sfc = new SpriteFactoryController(
-            new DragSprite(mGame, mWorkspace, Assets.mAppIcon)
-                    .setPosition(50, 350),
+            new DragSprite(mGame, mWorkspace)
+                    .setCostume(Assets.mAppIcon)
+                    .setPosition(50, 280),
             mGame,
-            mWorkspace);
+            mWorkspace,
+            mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
     mTouchState.addTouchListener(sfc);
+
+    sfc = new SpriteFactoryController(
+            new DragSprite(mGame, mWorkspace)
+                    .setCostume(Assets.mBlock)
+                    .setPosition(50, 360),
+            mGame,
+            mWorkspace,
+            mTouchState);
+
+    mWorkspace.addSprite(sfc.mFactorySprite);
+    mTouchState.addTouchListener(sfc);
+
 }
 
 @Override
@@ -117,10 +129,6 @@ private static class DragSprite extends Sprite {
         super(game, ws);
     }
 
-    public DragSprite(Game game, Workspace ws, Pixmap costume) {
-        super(game, ws, costume);
-    }
-
     @Override
     public void present(float deltaTime) {
         if (mFocused) {
@@ -143,45 +151,61 @@ private static class LabelSprite extends Sprite {
 
     public LabelSprite(Game game, Workspace ws) {
         super(game, ws);
-    }
 
-    public LabelSprite(Game game, Workspace ws, Pixmap costume) {
-        super(game, ws, costume);
+        this.mCostume = Assets.mBlock;
     }
 
     public LabelSprite setText(String text) {
         mText = text;
+
+        int[] textBound = new int[2];
+        mGame.getGraphics().textSize(mText, mTextSize, textBound);
+
+        mWidth = textBound[0];
+        mHeight = textBound[1];
+        adjustBoundingBox();
         return this; }
 
     public LabelSprite setTextSize(float size) {
         mTextSize = size;
         return this; }
 
-    public LabelSprite setWrapContent(boolean wrap) {
-        return this;
-    }
-
-    private float mTextSize = 20.0f;
-    private int mPadding = 5;
+    private float mTextSize = 30.0f;
+    private int mPadding = 10;
     private String mText;
+
+    private static final int RAW_HEIGHT = 50;
+    private static final int RAW_WIDTH = 87;
+
+    private static final int END_CAP_WIDTH = 10;
+    private static final int LEFT_SECTION_WIDTH = 55;
+    private static final int BOTTOM_CAP_HEIGHT = 15;
+    private static final int TOP_CAP_HEIGHT = 7;
 
     @Override
     public void present(float deltaTime) {
-        mGame.getGraphics().drawRect(
-                mBoundingBox.left,
-                mBoundingBox.top,
-                mBoundingBox.width(),
-                mBoundingBox.height(),
-                0xFF8FFFFF);
+
+        mGame.getGraphics().drawPixmap(
+                mCostume,
+                mBoundingBox.left - mPadding,
+                mBoundingBox.top - mPadding);
+
+        /*mGame.getGraphics().drawRect(
+                mBoundingBox.left - mPadding,
+                mBoundingBox.top - mPadding,
+                mBoundingBox.width() + mPadding*3,
+                mBoundingBox.height() + mPadding*3,
+                0xFF8FFFFF);*/
 
         mGame.getGraphics().drawText(
                 mText,
-                mBoundingBox.left + mPadding,
-                mBoundingBox.top + mPadding + (int) mTextSize,
+                mBoundingBox.left,
+                mBoundingBox.top + mHeight,
                 mTextSize,
                 0xFF000000);
 
     }
+
 
 }
 
@@ -193,10 +217,6 @@ private static class RandomSpawningSprite extends Sprite {
      */
     public RandomSpawningSprite(Game game, Workspace ws) {
         super(game, ws);
-    }
-
-    public RandomSpawningSprite(Game game, Workspace ws, Pixmap costume) {
-        super(game, ws, costume);
     }
 
     @Override
@@ -220,11 +240,11 @@ private static class RandomSpawningSprite extends Sprite {
         Random r = new Random();
         mWorkspace.addSprite(new RandomSpawningSprite(
                 mGame,
-                mWorkspace,
-                mCostume)
-            .setPosition(
-                    r.nextInt(AndroidGame.MAJOR_AXIS),
-                    r.nextInt(AndroidGame.MINOR_AXIS)));
+                mWorkspace)
+                .setCostume(mCostume)
+                .setPosition(
+                        r.nextInt(AndroidGame.MAJOR_AXIS),
+                        r.nextInt(AndroidGame.MINOR_AXIS)));
     }
 
 }
@@ -300,11 +320,13 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
     Sprite mFactorySprite;
     Workspace mWorkspace;
     Game mGame;
+    TouchMachine mMachine;
 
-    public SpriteFactoryController(Sprite sprite, Game g, Workspace ws) {
+    public SpriteFactoryController(Sprite sprite, Game g, Workspace ws, TouchMachine machine) {
         mFactorySprite = sprite;
         mGame = g;
         mWorkspace = ws;
+        mMachine = machine;
     }
 
     @Override
@@ -339,8 +361,11 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
 
     @Override
     public TouchMachine.DragUpdater startDrag() {
-        final Sprite s = new DragSprite(mGame, mWorkspace, mFactorySprite.mCostume)
+        final Sprite s = new DragSprite(mGame, mWorkspace)
+                .setCostume(mFactorySprite.mCostume)
                 .setPosition(mFactorySprite.getX(), mFactorySprite.getY());
+
+        mMachine.addTouchListener(new SpriteController(s));
 
         mWorkspace.addSprite(s);
 

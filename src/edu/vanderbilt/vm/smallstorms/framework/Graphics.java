@@ -22,7 +22,7 @@ public interface Graphics {
 
     public void drawText(String text, int x, int y, float size, int color);
 
-    public void textSize(String text, int[] dimension);
+    public void textSize(String text, float size, int[] dimension);
 
     public int getWidth();
 

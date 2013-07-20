@@ -15,8 +15,11 @@ public class Sprite {
 protected Game mGame;
 protected Workspace mWorkspace;
 
-private Point mPosition;
-protected Rect mBoundingBox;
+private Point mPosition = new Point();
+protected int mWidth;
+protected int mHeight;
+
+protected Rect mBoundingBox = new Rect();
 protected Pixmap mCostume;
 
 boolean mFocused;
@@ -28,14 +31,6 @@ boolean mFocused;
 public Sprite(Game game, Workspace ws) {
     mGame = game;
     mWorkspace = ws;
-}
-
-public Sprite(Game game, Workspace ws, Pixmap costume) {
-    this(game, ws);
-    mPosition = new Point(0, 0);
-    mCostume = costume;
-    mBoundingBox = new Rect();
-    adjustBoundingBox();
 }
 
 public Sprite setPosition(Point position) {
@@ -52,6 +47,9 @@ public int getY() { return mPosition.y; }
 
 public Sprite setCostume(Pixmap costume) {
     mCostume = costume;
+    mWidth = mCostume.getWidth();
+    mHeight = mCostume.getHeight();
+    adjustBoundingBox();
     return this; }
 
 /**
@@ -76,12 +74,12 @@ public boolean touches(int x, int y) {
     return mBoundingBox.contains(x, y);
 }
 
-private void adjustBoundingBox() {
+public void adjustBoundingBox() {
     mBoundingBox.set(
-            mPosition.x - mCostume.getWidth()/2,    // left
-            mPosition.y - mCostume.getHeight()/2,   // top
-            mPosition.x + mCostume.getWidth()/2,    // right
-            mPosition.y + mCostume.getHeight()/2);  // bottom
+            mPosition.x - mWidth/2,    // left
+            mPosition.y - mHeight/2,   // top
+            mPosition.x + mWidth/2,    // right
+            mPosition.y + mHeight/2);  // bottom
 }
 
 public void click() {}
