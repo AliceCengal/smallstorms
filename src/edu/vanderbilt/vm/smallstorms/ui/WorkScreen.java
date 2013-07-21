@@ -17,8 +17,8 @@ public class WorkScreen extends Screen {
 Random mRandom;
 FPSCounter mFPS;
 
-private TouchMachine mTouchState;
-private Workspace mWorkspace;
+final private TouchMachine mTouchState;
+final private Workspace mWorkspace;
 
 public WorkScreen(Game game) {
     super(game);
@@ -38,8 +38,7 @@ public WorkScreen(Game game) {
             new DragSprite(mGame, mWorkspace)
                     .setCostume(Assets.mPointerStart)
                     .setPosition(50, 40),
-            mGame,
-            mWorkspace,
+            new RegularSpriteFactory(mWorkspace, mGame, Assets.mPointerStart),
             mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
@@ -49,8 +48,7 @@ public WorkScreen(Game game) {
             new DragSprite(mGame, mWorkspace)
                     .setCostume(Assets.mPointerArrow)
                     .setPosition(50, 120),
-            mGame,
-            mWorkspace,
+            new RegularSpriteFactory(mWorkspace, mGame, Assets.mPointerArrow),
             mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
@@ -60,8 +58,7 @@ public WorkScreen(Game game) {
             new DragSprite(mGame, mWorkspace)
                     .setCostume(Assets.mPointerEnd)
                     .setPosition(50, 200),
-            mGame,
-            mWorkspace,
+            new RegularSpriteFactory(mWorkspace, mGame, Assets.mPointerEnd),
             mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
@@ -71,8 +68,7 @@ public WorkScreen(Game game) {
             new DragSprite(mGame, mWorkspace)
                     .setCostume(Assets.mAppIcon)
                     .setPosition(50, 280),
-            mGame,
-            mWorkspace,
+            new RegularSpriteFactory(mWorkspace, mGame, Assets.mAppIcon),
             mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
@@ -82,8 +78,7 @@ public WorkScreen(Game game) {
             new DragSprite(mGame, mWorkspace)
                     .setCostume(Assets.mBlock)
                     .setPosition(50, 360),
-            mGame,
-            mWorkspace,
+            new TextSpriteFactory(mWorkspace, mGame),
             mTouchState);
 
     mWorkspace.addSprite(sfc.mFactorySprite);
@@ -121,6 +116,41 @@ public void resume() {
 
 @Override
 public void dispose() {
+}
+
+private static class RegularSpriteFactory implements SpriteFactory {
+
+    Pixmap mCostume;
+    Workspace mWs;
+    Game mGame;
+
+    RegularSpriteFactory(Workspace ws, Game game, Pixmap costume) {
+        mWs = ws; mGame = game; mCostume = costume;
+    }
+
+    @Override
+    public Sprite createSprite() {
+        Sprite s = new DragSprite(mGame, mWs).setCostume(mCostume);
+        mWs.addSprite(s);
+        return s;
+    }
+}
+
+private static class TextSpriteFactory implements SpriteFactory {
+
+    Workspace mWs;
+    Game mGame;
+
+    TextSpriteFactory(Workspace ws, Game game) {
+        mWs = ws; mGame = game;
+    }
+
+    @Override
+    public Sprite createSprite() {
+        Sprite s = new LabelSprite(mGame, mWs).setRandomText();
+        mWs.addSprite(s);
+        return s;
+    }
 }
 
 private static class DragSprite extends Sprite {
@@ -169,6 +199,19 @@ private static class LabelSprite extends Sprite {
     public LabelSprite setTextSize(float size) {
         mTextSize = size;
         return this; }
+
+    public LabelSprite setRandomText() {
+        Random r = new Random();
+        StringBuilder str = new StringBuilder();
+
+        for (int i = 3; i < (r.nextInt(14) + 4); i++) {
+            str.append((char) ('a' + r.nextInt(25)));
+        }
+
+        this.setText(str.toString());
+
+        return this;
+    }
 
     private float mTextSize = 30.0f;
     private int mPadding = 10;
@@ -315,18 +358,21 @@ public static class SpriteController implements TouchMachine.TouchListener {
     }
 }
 
+public interface SpriteFactory {
+    Sprite createSprite();
+}
+
 public static class SpriteFactoryController implements TouchMachine.TouchListener {
 
     Sprite mFactorySprite;
-    Workspace mWorkspace;
-    Game mGame;
     TouchMachine mMachine;
 
-    public SpriteFactoryController(Sprite sprite, Game g, Workspace ws, TouchMachine machine) {
-        mFactorySprite = sprite;
-        mGame = g;
-        mWorkspace = ws;
+    SpriteFactory mSpawner;
+
+    public SpriteFactoryController(Sprite factorySprite, SpriteFactory factory, TouchMachine machine) {
+        mFactorySprite = factorySprite;
         mMachine = machine;
+        mSpawner = factory;
     }
 
     @Override
@@ -361,14 +407,10 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
 
     @Override
     public TouchMachine.DragUpdater startDrag() {
-        final Sprite s = new DragSprite(mGame, mWorkspace)
-                .setCostume(mFactorySprite.mCostume)
+        final Sprite s = mSpawner.createSprite()
                 .setPosition(mFactorySprite.getX(), mFactorySprite.getY());
 
         mMachine.addTouchListener(new SpriteController(s));
-
-        mWorkspace.addSprite(s);
-
         return new TouchMachine.DragUpdater() {
             @Override public void update(Point position) {
                 s.setPosition(position); }};
@@ -391,5 +433,7 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
     public void drop(TouchMachine.TouchListener dropper) {
     }
 }
+
+
 
 }
