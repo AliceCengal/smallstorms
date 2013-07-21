@@ -183,6 +183,7 @@ private static class LabelSprite extends Sprite {
         super(game, ws);
 
         this.mCostume = Assets.mBlock;
+        this.mTextBound = new Rect();
     }
 
     public LabelSprite setText(String text) {
@@ -191,8 +192,9 @@ private static class LabelSprite extends Sprite {
         int[] textBound = new int[2];
         mGame.getGraphics().textSize(mText, mTextSize, textBound);
 
-        mWidth = textBound[0];
-        mHeight = textBound[1];
+        mTextBound.set(0, 0, textBound[0], textBound[1]);
+        mWidth = textBound[0] + mPadding*2;
+        mHeight = mCostume.getHeight(); // textBound[1] + mPadding*2;
         adjustBoundingBox();
         return this; }
 
@@ -204,7 +206,8 @@ private static class LabelSprite extends Sprite {
         Random r = new Random();
         StringBuilder str = new StringBuilder();
 
-        for (int i = 3; i < (r.nextInt(14) + 4); i++) {
+        int len = (r.nextInt(14) + 4);
+        for (int i = 0; i < len; i++) {
             str.append((char) ('a' + r.nextInt(25)));
         }
 
@@ -213,25 +216,23 @@ private static class LabelSprite extends Sprite {
         return this;
     }
 
-    private float mTextSize = 30.0f;
+    private float mTextSize = 25.0f;
     private int mPadding = 10;
     private String mText;
+    private Rect mTextBound;
 
     private static final int RAW_HEIGHT = 50;
     private static final int RAW_WIDTH = 87;
 
     private static final int END_CAP_WIDTH = 10;
     private static final int LEFT_SECTION_WIDTH = 55;
-    private static final int BOTTOM_CAP_HEIGHT = 15;
+    private static final int BOTTOM_CAP_HEIGHT = 18;
     private static final int TOP_CAP_HEIGHT = 7;
 
     @Override
     public void present(float deltaTime) {
 
-        mGame.getGraphics().drawPixmap(
-                mCostume,
-                mBoundingBox.left - mPadding,
-                mBoundingBox.top - mPadding);
+        drawBackground();
 
         /*mGame.getGraphics().drawRect(
                 mBoundingBox.left - mPadding,
@@ -242,13 +243,51 @@ private static class LabelSprite extends Sprite {
 
         mGame.getGraphics().drawText(
                 mText,
-                mBoundingBox.left,
-                mBoundingBox.top + mHeight,
+                mBoundingBox.left + mPadding,
+                mBoundingBox.bottom - BOTTOM_CAP_HEIGHT,
                 mTextSize,
                 0xFF000000);
 
     }
 
+    private void drawBackground() {
+        if (mTextBound.width() > (RAW_WIDTH - 2*END_CAP_WIDTH)) {
+            final int extraWidth = mTextBound.width() - (RAW_WIDTH - 2*END_CAP_WIDTH);
+
+            mGame.getGraphics().drawPixmap(
+                    mCostume,
+                    mBoundingBox.left,
+                    mBoundingBox.top,
+                    0, 0,
+                    LEFT_SECTION_WIDTH, RAW_HEIGHT);
+
+            int addWidth = 0;
+            while (addWidth < (extraWidth + END_CAP_WIDTH*2)) {
+
+                mGame.getGraphics().drawPixmap(
+                        mCostume,
+                        mBoundingBox.left + LEFT_SECTION_WIDTH + addWidth - 1,
+                        mBoundingBox.top,
+                        LEFT_SECTION_WIDTH, 0,
+                        END_CAP_WIDTH/2 +4, RAW_HEIGHT);
+
+                addWidth += (END_CAP_WIDTH/2);
+            }
+
+            mGame.getGraphics().drawPixmap(
+                    mCostume,
+                    mBoundingBox.left + RAW_WIDTH + extraWidth - END_CAP_WIDTH,
+                    mBoundingBox.top,
+                    RAW_WIDTH - END_CAP_WIDTH, 0,
+                    END_CAP_WIDTH, RAW_HEIGHT);
+
+        } else {
+            mGame.getGraphics().drawPixmap(
+                    mCostume,
+                    mBoundingBox.left,
+                    mBoundingBox.top);
+        }
+    }
 
 }
 
@@ -353,8 +392,9 @@ public static class SpriteController implements TouchMachine.TouchListener {
     }
 
     @Override
-    public void drop(TouchMachine.TouchListener dropper) {
+    public boolean drop(TouchMachine.TouchListener dropper) {
         dropper.setPosition(new Point(mSprite.getX(), mSprite.getY() + 50));
+        return true;
     }
 }
 
@@ -377,7 +417,7 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
 
     @Override
     public void setPosition(Point position) {
-        mFactorySprite.setPosition(position);
+        //mFactorySprite.setPosition(position);
     }
 
     @Override
@@ -423,14 +463,17 @@ public static class SpriteFactoryController implements TouchMachine.TouchListene
 
     @Override
     public void enterHover(TouchMachine.TouchListener hoverer) {
+        mFactorySprite.mFocused = true;
     }
 
     @Override
     public void leaveHover() {
+        mFactorySprite.mFocused = false;
     }
 
     @Override
-    public void drop(TouchMachine.TouchListener dropper) {
+    public boolean drop(TouchMachine.TouchListener dropper) {
+        return false;
     }
 }
 

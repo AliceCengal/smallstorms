@@ -125,10 +125,11 @@ public class AndroidGraphics implements Graphics {
 
     @Override
     public void drawText(String text, int x, int y, float size, int color) {
-        paint.setColor(color);
-        paint.setTextSize(size);
-        paint.setTypeface(Typeface.DEFAULT);
-        canvas.drawText(text, x, y, paint);
+        mTextPaint.setColor(color);
+        mTextPaint.setTextSize(size);
+        mTextPaint.setTypeface(Typeface.DEFAULT);
+
+        canvas.drawText(text, x, y, mTextPaint);
     }
 
     @Override

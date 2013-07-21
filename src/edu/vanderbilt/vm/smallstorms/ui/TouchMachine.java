@@ -29,7 +29,7 @@ public interface TouchListener {
 
     void enterHover(TouchListener hoverer);
     void leaveHover();
-    void drop(TouchListener dropper);
+    boolean drop(TouchListener dropper);
 
 }
 
@@ -90,18 +90,20 @@ private static final int VOID = 1;
 private static final int CLICK = 2;
 private static final int DRAG = 3;
 private static final int SLEEP = 4;
+private static final int HOVER = 5;
 
 /**
  * Set up a pool of machines that can be recycled. This hopefully avoids GC
  * during vigorous touching sessions.
  */
 private void initTouchMachines() {
-    mTouchMachines = new MachineState[5];
+    mTouchMachines = new MachineState[6];
     mTouchMachines[VANGUARD] = new VanguardMachine();
     mTouchMachines[VOID] = new VoidMachine();
     mTouchMachines[CLICK] = new ClickMachine();
     mTouchMachines[DRAG] = new DragMachine();
     mTouchMachines[SLEEP] = new SleepMachine();
+    mTouchMachines[HOVER] = new HoverMachine();
     mTouchState = mTouchMachines[VANGUARD];
 }
 
@@ -220,7 +222,15 @@ private class DragMachine implements MachineState {
             event = events.get(i);
             if (event.type == Input.TouchEvent.TOUCH_DRAGGED) {
                 mReusablePoint.set(event.x, event.y);
-                mUpdater.update(mReusablePoint); }
+                mUpdater.update(mReusablePoint);
+
+                TouchListener l = getTouchingListener(mReusablePoint);
+                if (l != null && l != mOrigin) {
+                    mTouchState = ((HoverMachine) mTouchMachines[HOVER]).setPoints(mOrigin, mInitial, mUpdater, l);
+                    mTouchState.handleTouchInput(events.subList(i + 1, len));
+                }
+
+            }
 
             else if (event.type == Input.TouchEvent.TOUCH_UP) {
                 mOrigin.endDrag();
@@ -235,8 +245,55 @@ private class DragMachine implements MachineState {
 
 private class HoverMachine implements MachineState {
 
+    TouchListener mOrigin;
+    Point mInitial = new Point();
+    DragUpdater mUpdater;
+
+    TouchListener mDestination;
+
+
+    MachineState setPoints(TouchListener origin, Point initial, DragUpdater updater, TouchListener destination) {
+        mOrigin = origin;
+        mDestination = destination;
+        mInitial = initial;
+        mUpdater = updater;
+
+        mDestination.enterHover(mOrigin);
+
+        return this;
+    }
+
     @Override
     public void handleTouchInput(List<Input.TouchEvent> events) {
+        int len = events.size();
+        Input.TouchEvent event;
+
+        for (int i = 0; i < len; i++) {
+            event = events.get(i);
+            if (event.type == Input.TouchEvent.TOUCH_DRAGGED) {
+                mReusablePoint.set(event.x, event.y);
+                mUpdater.update(mReusablePoint);
+
+                if (!mDestination.getTouchBox().contains(event.x, event.y)) {
+                    mDestination.leaveHover();
+
+                    mTouchState = ((DragMachine) mTouchMachines[DRAG]).setOrigin(mOrigin);
+                    mTouchState.handleTouchInput(events.subList(i + 1, len));
+                    return; }}
+
+            if (event.type == Input.TouchEvent.TOUCH_UP) {
+                mDestination.leaveHover();
+
+                if (!mDestination.drop(mOrigin)) {
+                    mUpdater.update(mInitial);
+                }
+
+                mOrigin.endDrag();
+
+                mTouchState = mTouchMachines[VANGUARD];
+                mTouchState.handleTouchInput(events.subList(i + 1, len));
+                return; }
+        }
     }
 }
 
